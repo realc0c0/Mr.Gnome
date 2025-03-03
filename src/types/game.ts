@@ -165,6 +165,10 @@ export interface Task {
 }
 
 export interface GameState {
+  playerLevel: number;
+  activeBuffs: any;
+  tokens: number;
+  player: Player;
   user: User;
   assets: Asset[];
   boosters: Booster[];

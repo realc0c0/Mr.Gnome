@@ -72,13 +72,15 @@ const DungeonGame: React.FC = () => {
         />
       </GameHeader>
       <GameContent>
-        <DungeonMap
-          dungeon={currentDungeon}
-          player={gameState.player}
-          onMove={handleMove}
-          onCombat={handleCombat}
-          onTokenCollect={handleTokenCollection}
-        />
+        {currentDungeon && (
+          <DungeonMap
+            dungeon={currentDungeon}
+            player={gameState.player}
+            onMove={handleMove}
+            onCombat={handleCombat}
+            onTokenCollect={handleTokenCollection}
+          />
+        )}
       </GameContent>
     </GameContainer>
   );

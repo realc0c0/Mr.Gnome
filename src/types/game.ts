@@ -178,4 +178,5 @@ export interface GameState {
   lastTapTime: Date;
   spinAvailable: boolean;
   lastSpinTime: Date;
+  currentDungeon?: Dungeon;
 }

@@ -29,8 +29,15 @@ const initialState: GameState = {
     attackBonus: 0,
     defenseBonus: 0
   },
-  inventory: [],
-  questProgress: {}
+  user: { id: '', telegramId: 0, username: '', referralCode: '', lastLoginDate: new Date(), loginStreak: 0, rank: 0, totalEarned: 0 },
+  assets: [],
+  boosters: [],
+  mines: [],
+  tasks: [],
+  tapPower: 1,
+  lastTapTime: new Date(),
+  spinAvailable: true,
+  lastSpinTime: new Date()
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {

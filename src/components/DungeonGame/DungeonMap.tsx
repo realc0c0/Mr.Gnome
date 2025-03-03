@@ -2,6 +2,8 @@ import React from 'react';
 import styled from 'styled-components';
 import { Player, Enemy, DungeonTile } from '../../types/game';
 
+type TileType = 'wall' | 'floor' | 'shop' | 'forge' | 'shrine' | 'token';
+
 const MapContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(15, 1fr);
@@ -11,7 +13,7 @@ const MapContainer = styled.div`
   aspect-ratio: 1;
 `;
 
-const Tile = styled.div<{ type: string }>`
+const Tile = styled.div<{ type: TileType }>`
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -24,10 +26,11 @@ const Tile = styled.div<{ type: string }>`
       case 'shop': return '#553';
       case 'forge': return '#533';
       case 'shrine': return '#335';
+      case 'token': return '#2C2';
       default: return '#222';
     }
   }};
-  cursor: ${({ type }) => type === 'floor' ? 'pointer' : 'default'};
+  cursor: ${({ type }) => type === 'floor' || type === 'token' ? 'pointer' : 'default'};
 `;
 
 interface DungeonMapProps {
@@ -92,7 +95,7 @@ export const DungeonMap: React.FC<DungeonMapProps> = ({
           return (
             <Tile
               key={`${x}-${y}`}
-              type={tile.type}
+              type={tile.type as TileType}
               onClick={() => handleTileClick(x, y)}
             >
               {isPlayer ? '🧙‍♂️' :
@@ -100,7 +103,8 @@ export const DungeonMap: React.FC<DungeonMapProps> = ({
                token ? '💎' :
                tile.type === 'shop' ? '🏪' :
                tile.type === 'forge' ? '⚒️' :
-               tile.type === 'shrine' ? '🏛️' : ''}
+               tile.type === 'shrine' ? '🏛️' :
+               tile.type === 'token' ? '💎' : ''}
             </Tile>
           );
         })

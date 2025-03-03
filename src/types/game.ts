@@ -42,6 +42,8 @@ export interface DungeonTile {
 
 export interface Dungeon {
   tiles: DungeonTile[][];
+  enemies: Enemy[];
+  tokens: { x: number; y: number; amount: number }[];
   width: number;
   height: number;
   level: number;

@@ -38,53 +38,59 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const user = await TelegramService.initializeSession();
 
       // Fetch user's game state
-      const { data: gameData, error: gameError } = await supabase
-        .from('users')
-        .select(`
-          *,
-          assets:user_assets(*),
-          boosters:user_boosters(*),
-          mines:user_mines(*)
-        `)
-        .eq('id', user.id)
-        .single();
+      if (WebApp.initDataUnsafe.user) {
+        const userId = WebApp.initDataUnsafe.user.id;
+        const { data: gameData, error: gameError } = await supabase
+          .from('users')
+          .select(`
+            *,
+            assets:user_assets(*),
+            boosters:user_boosters(*),
+            mines:user_mines(*)
+          `)
+          .eq('id', userId)
+          .single();
 
-      if (gameError) {
-        throwAppError(errorCodes.INIT_FAILED, 'Failed to load game data');
-      }
+        if (gameError) {
+          throwAppError(errorCodes.INIT_FAILED, 'Failed to load game data');
+        }
 
-      const newGameState = {
-        user: {
-          id: gameData.id,
-          telegramId: gameData.telegram_id,
-          username: gameData.username,
-          walletAddress: gameData.wallet_address,
-          referralCode: gameData.referral_code,
-          referredBy: gameData.referred_by,
-          lastLoginDate: new Date(gameData.last_login),
-          loginStreak: gameData.login_streak,
-          rank: gameData.rank,
-          totalEarned: gameData.total_earned
-        },
-        assets: gameData.assets || [],
-        boosters: gameData.boosters || [],
-        mines: gameData.mines || [],
-        tasks: [],
-        tapPower: calculateTapPower(gameData),
-        lastTapTime: new Date(),
-        spinAvailable: isSpinAvailable(gameData.last_spin),
-        lastSpinTime: gameData.last_spin ? new Date(gameData.last_spin) : new Date()
-      };
+        const newGameState = {
+          user: {
+            id: gameData.id,
+            telegramId: gameData.telegram_id,
+            username: gameData.username,
+            walletAddress: gameData.wallet_address,
+            referralCode: gameData.referral_code,
+            referredBy: gameData.referred_by,
+            lastLoginDate: new Date(gameData.last_login),
+            loginStreak: gameData.login_streak,
+            rank: gameData.rank,
+            totalEarned: gameData.total_earned
+          },
+          assets: gameData.assets || [],
+          boosters: gameData.boosters || [],
+          mines: gameData.mines || [],
+          tasks: [],
+          tapPower: calculateTapPower(gameData),
+          lastTapTime: new Date(),
+          spinAvailable: isSpinAvailable(gameData.last_spin),
+          lastSpinTime: gameData.last_spin ? new Date(gameData.last_spin) : new Date()
+        };
 
-      setGameState(newGameState);
-      cache.set('gameState', newGameState, 60000); // Cache for 1 minute
+        setGameState(newGameState);
+        cache.set('gameState', newGameState, 60000); // Cache for 1 minute
 
-      // Show welcome message for new users
-      if (!gameData.wallet_address) {
-        WebApp.showPopup({
-          title: 'Welcome to Mr.Gnome! 🎅',
-          message: 'Connect your TON wallet to start earning tokens!'
-        });
+        // Show welcome message for new users
+        if (!gameData.wallet_address) {
+          WebApp.showPopup({
+            title: 'Welcome to Mr.Gnome! 🎅',
+            message: 'Connect your TON wallet to start earning tokens!'
+          });
+        }
+
+      } else {
+        throwAppError(errorCodes.INIT_FAILED, 'Failed to load user data');
       }
 
     } catch (err) {
@@ -101,25 +107,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const setupRealtimeSubscription = () => {
-    const userSubscription = supabase
-      .channel('game_state_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'users',
-          filter: `telegram_id=eq.${WebApp.initDataUnsafe.user.id}`
-        },
-        () => {
-          initializeGame();
-        }
-      )
-      .subscribe();
+    if (WebApp.initDataUnsafe.user) {
+      const userId = WebApp.initDataUnsafe.user.id;
+      const userSubscription = supabase
+        .channel('game_state_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'users',
+            filter: `telegram_id=eq.${userId}`
+          },
+          () => {
+            initializeGame();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(userSubscription);
-    };
+      return () => {
+        supabase.removeChannel(userSubscription);
+      };
+    }
   };
 
   const calculateTapPower = (userData: any) => {
@@ -152,18 +161,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cache.set('gameState', newState, 60000);
 
       // Update database
-      const { error } = await supabase
-        .from('users')
-        .update({
-          total_earned: updates.user?.totalEarned,
-          rank: updates.user?.rank,
-          // Add other fields as needed
-        })
-        .eq('telegram_id', WebApp.initDataUnsafe.user.id);
+      if (WebApp.initDataUnsafe.user) {
+        const userId = WebApp.initDataUnsafe.user.id;
+        const { error } = await supabase
+          .from('users')
+          .update({
+            total_earned: updates.user?.totalEarned,
+            rank: updates.user?.rank,
+            // Add other fields as needed
+          })
+          .eq('telegram_id', userId);
 
-      if (error) {
+        if (error) {
+          throwAppError(errorCodes.NETWORK_ERROR, 'Failed to save progress');
+        }
+      } else {
         throwAppError(errorCodes.NETWORK_ERROR, 'Failed to save progress');
       }
+
     } catch (err) {
       handleError(err);
       // Revert local state on error

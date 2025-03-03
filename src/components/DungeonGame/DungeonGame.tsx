@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import WebApp from '@twa-dev/sdk';
 import { TokenDisplay } from './TokenDisplay';
 import { DungeonMap } from './DungeonMap';
-import { GameState, Player, Enemy } from '../../types/game';
+import { GameState, Player, Enemy, Dungeon } from '../../types/game';
 import { generateDungeon } from '../../utils/dungeonGenerator';
 import { useGameState } from '../../hooks/useGameState';
 
@@ -31,7 +31,7 @@ const GameContent = styled.div`
 
 const DungeonGame: React.FC = () => {
   const { gameState, dispatch } = useGameState();
-  const [currentDungeon, setCurrentDungeon] = useState(null);
+  const [currentDungeon, setCurrentDungeon] = useState<Dungeon | null>(null);
 
   useEffect(() => {
     // Initialize game with Telegram theme

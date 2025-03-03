@@ -37,15 +37,15 @@ const TOKEN_SIGILS: TokenSigil[] = [
   }
 ];
 
+type EnemyType = 'GOBLIN' | 'SKELETON' | 'MIMIC' | 'CURSED_MERCHANT';
+
 const generateEnemies = (config: DungeonConfig): Enemy[] => {
   const enemyCount = Math.floor(config.width * config.height * 0.15);
   const enemies: Enemy[] = [];
 
   for (let i = 0; i < enemyCount; i++) {
     const enemy: Enemy = {
-      type: ['GOBLIN', 'SKELETON', 'MIMIC', 'CURSED_MERCHANT'][
-        Math.floor(Math.random() * 4)
-      ],
+      type: ['GOBLIN', 'SKELETON', 'MIMIC', 'CURSED_MERCHANT'][Math.floor(Math.random() * 4)] as EnemyType,
       x: Math.floor(Math.random() * config.width),
       y: Math.floor(Math.random() * config.height),
       health: 10 + config.difficulty * 2,
